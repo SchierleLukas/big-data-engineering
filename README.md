@@ -16,19 +16,19 @@ graph TD
         C -->|Verarbeitet Daten| D[Transformierte Daten]
     end
 
-    subgraph Long-Term_Storage
+    subgraph Long_Term_Storage
         B -->|Archiviert Logs| G[Hadoop HDFS]
     end
 
     subgraph Serving_Layer
-        D -->|Speichert aggregierte Ergebnisse| E[MariaDB]
+        D -->|Speichert Ergebnisse| E[MariaDB]
     end
 
     subgraph Dashboard
-        E -->|Abfrage der Daten| F[Grafana / Web-Dashboard]
+        E -->|Datenvisualisierung| F[Grafana / Web-Dashboard]
     end
 
     G -->|Batch-Verarbeitung| H[Apache Spark Batch]
-    H -->|Langzeit-Analysen| E
+    H -->|Schreibt Ergebnisse| E
 
 # End Systemarchitektur
