@@ -30,5 +30,3 @@ graph TD
 
     G -->|Batch-Verarbeitung| H[Apache Spark Batch]
     H -->|Schreibt Ergebnisse| E
-
-# End Systemarchitektur
