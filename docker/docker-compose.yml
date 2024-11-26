@@ -1,0 +1,63 @@
+version: '3.8'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  kafka:
+    container_name: docker-kafka-1
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+    - zookeeper
+    environment:
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181  # Verbindet sich mit Zookeeper
+        KAFKA_LISTENERS: PLAINTEXT://:9092      # Kafka Listener auf Port 9092
+        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092  # Außen sichtbar
+        KAFKA_BROKER_ID: 1  # Broker ID, normalerweise 1
+    volumes:
+    - kafka-data:/var/lib/kafka/data  # Kafka-Volume korrekt zugeordnet
+
+
+  spark-master:
+    image: bitnami/spark:latest
+    environment:
+      SPARK_MODE: master
+    ports:
+      - "7077:7077"
+      - "8080:8080"
+
+  spark-worker:
+    image: bitnami/spark:latest
+    environment:
+      SPARK_MODE: worker
+      SPARK_MASTER_URL: spark://spark-master:7077
+    depends_on:
+      - spark-master
+
+  mariadb:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: logs
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb-data:/var/lib/mysql  # Persistent Volume für MariaDB-Daten
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana  # Persistent Volume für Grafana-Daten
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "admin"  # Optional: Admin-Passwort setzen
+
+volumes:
+  mariadb-data:  # Volume für MariaDB
+    driver: local
+  grafana-data:  # Volume für Grafana
+    driver: local
+  kafka-data:  # Volume für Kafka (nun richtig zugeordnet)
+    driver: local
