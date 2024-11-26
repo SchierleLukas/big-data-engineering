@@ -18,7 +18,6 @@ services:
     volumes:
     - kafka-data:/var/lib/kafka/data  # Kafka-Volume korrekt zugeordnet
 
-
   spark-master:
     image: bitnami/spark:latest
     environment:
@@ -54,6 +53,15 @@ services:
     environment:
       GF_SECURITY_ADMIN_PASSWORD: "admin"  # Optional: Admin-Passwort setzen
 
+  kafka-producer:
+    build:
+      context: ../ingestion  # Verzeichnis, in dem sich das Dockerfile befindet
+      dockerfile: Dockerfile
+    depends_on:
+      - kafka
+    environment:
+      BOOTSTRAP_SERVERS: docker-kafka-1:9092
+
 volumes:
   mariadb-data:  # Volume für MariaDB
     driver: local
@@ -61,3 +69,4 @@ volumes:
     driver: local
   kafka-data:  # Volume für Kafka (nun richtig zugeordnet)
     driver: local
+  
