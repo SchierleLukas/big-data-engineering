@@ -4,29 +4,18 @@ This repository is used for the exam in the module "W3M20027 Big Data Engineerin
 # Systemarchitektur
 
 ```mermaid
-graph TD
-    subgraph Ingestion_Layer
-        A1[Log-Datenquelle 1] -->|Sendet Logs| B[Apache Kafka]
-        A2[Log-Datenquelle 2] -->|Sendet Logs| B
-        A3[Log-Datenquelle 3] -->|Sendet Logs| B
+
+    subgraph Serving Layer
+        D --> E[MariaDB]
     end
 
-    subgraph Stream_Processing_Layer
-        B -->|Konsumiert Daten| C[Apache Spark Streaming]
-        C -->|Verarbeitet Daten| D[Transformierte Daten]
+    subgraph Visualization Layer
+        E --> F[Grafana Dashboard]
     end
 
-    subgraph Long_Term_Storage
-        B -->|Archiviert Logs| G[Hadoop HDFS]
-    end
-
-    subgraph Serving_Layer
-        D -->|Speichert Ergebnisse| E[MariaDB]
-    end
-
-    subgraph Dashboard
-        E -->|Datenvisualisierung| F[Grafana / Web-Dashboard]
-    end
-
-    G -->|Batch-Verarbeitung| H[Apache Spark Batch]
-    H -->|Schreibt Ergebnisse| E
+    style A fill:#f9f,stroke:#333,stroke-width:4px
+    style B fill:#fc9,stroke:#333,stroke-width:2px
+    style C fill:#9cf,stroke:#333,stroke-width:2px
+    style D fill:#cfc,stroke:#333,stroke-width:2px
+    style E fill:#ffc,stroke:#333,stroke-width:2px
+    style F fill:#ccf,stroke:#333,stroke-width:2px
