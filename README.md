@@ -4,22 +4,21 @@ This repository is used for the exam in the module "W3M20027 Big Data Engineerin
 # Systemarchitektur
 
 ```mermaid
-
-    graph TD
-    subgraph Ingestion Layer
+graph TD
+    subgraph Ingestion_Layer
         A[Server Logs] --> B[Apache Kafka]
     end
 
-    subgraph Stream Processing Layer
+    subgraph Stream_Processing_Layer
         B --> C[Apache Spark Streaming]
         C --> D[Anomaly Detection Algorithm]
     end
 
-    subgraph Serving Layer
+    subgraph Serving_Layer
         D --> E[MariaDB]
     end
 
-    subgraph Visualization Layer
+    subgraph Visualization_Layer
         E --> F[Grafana Dashboard]
     end
 
@@ -28,4 +27,4 @@ This repository is used for the exam in the module "W3M20027 Big Data Engineerin
     style C fill:#9cf,stroke:#333,stroke-width:2px
     style D fill:#cfc,stroke:#333,stroke-width:2px
     style E fill:#ffc,stroke:#333,stroke-width:2px
-    style
+    style F fill:#ccf,stroke:#333,stroke-width:2px
