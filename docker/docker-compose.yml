@@ -46,13 +46,20 @@ services:
 
   grafana:
     image: grafana/grafana:latest
+    container_name: grafana
     ports:
       - "3000:3000"
     volumes:
-      - grafana-data:/var/lib/grafana  # Persistent Volume für Grafana-Daten
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards/dashboards.yaml:/etc/grafana/provisioning/dashboards.yaml
+      - grafana-data:/var/lib/grafana
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: "admin"  # Optional: Admin-Passwort setzen
-
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - mariadb
+       
   kafka-producer:
     build:
       context: ../ingestion  # Verzeichnis, in dem sich das Dockerfile befindet
