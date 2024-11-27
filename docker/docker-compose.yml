@@ -5,18 +5,41 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
 
-  kafka:
-    container_name: docker-kafka-1
+  kafka-broker-1:
     image: confluentinc/cp-kafka:latest
+    container_name: kafka-broker-1
     depends_on:
-    - zookeeper
+      - zookeeper
+    ports:
+      - "9092:9092"
     environment:
-        KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181  # Verbindet sich mit Zookeeper
-        KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092 # Kafka Listener auf Port 9092
-        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://docker-kafka-1:9092 # Außen sichtbar
-        KAFKA_BROKER_ID: 1  # Broker ID, normalerweise 1
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker-1:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     volumes:
-    - /var/lib/kafka/data  # Temporäres Volume verwenden, dass Neustart funktioniert
+      - /var/lib/kafka-1/data
+
+  kafka-broker-2:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka-broker-2
+    depends_on:
+      - zookeeper
+    ports:
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-broker-2:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - /var/lib/kafka-2/data
 
   spark-master:
     image: bitnami/spark:latest
@@ -65,15 +88,14 @@ services:
       context: ../ingestion  # Verzeichnis, in dem sich das Dockerfile befindet
       dockerfile: Dockerfile
     depends_on:
-      - kafka
+      - kafka-broker-1
+      - kafka-broker-2
     environment:
-      BOOTSTRAP_SERVERS: docker-kafka-1:9092
+      BOOTSTRAP_SERVERS: kafka-broker-1:9092,kafka-broker-2:9093
 
 volumes:
   mariadb-data:  # Volume für MariaDB
     driver: local
   grafana-data:  # Volume für Grafana
-    driver: local
-  kafka-data:  # Volume für Kafka (nun richtig zugeordnet)
     driver: local
   

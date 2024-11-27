@@ -1,6 +1,10 @@
+import os
 from confluent_kafka import Producer
 import json
 import time
+
+# Zugriff auf die Umgebungsvariable
+bootstrap_servers = os.getenv('BOOTSTRAP_SERVERS', 'localhost:9092')
 
 # Konfiguration des Producers
 def delivery_report(err, msg):
@@ -14,7 +18,7 @@ def delivery_report(err, msg):
         print(f'Nachricht erfolgreich gesendet: {msg.topic()} [{msg.partition()}]')
 
 producer_config = {
-    'bootstrap.servers': 'docker-kafka-1:9092'
+    'bootstrap.servers': bootstrap_servers
 }
 
 # Erstelle den Producer
