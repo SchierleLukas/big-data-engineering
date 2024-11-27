@@ -12,11 +12,11 @@ services:
     - zookeeper
     environment:
         KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181  # Verbindet sich mit Zookeeper
-        KAFKA_LISTENERS: PLAINTEXT://:9092      # Kafka Listener auf Port 9092
-        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092  # Außen sichtbar
+        KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092 # Kafka Listener auf Port 9092
+        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://docker-kafka-1:9092 # Außen sichtbar
         KAFKA_BROKER_ID: 1  # Broker ID, normalerweise 1
     volumes:
-    - kafka-data:/var/lib/kafka/data  # Kafka-Volume korrekt zugeordnet
+    - /var/lib/kafka/data  # Temporäres Volume verwenden, dass Neustart funktioniert
 
   spark-master:
     image: bitnami/spark:latest
