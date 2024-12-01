@@ -1,25 +1,27 @@
-import os
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col, window
-from pyspark.sql.types import StructType, StringType, TimestampType
+from pyspark.sql.types import *
+from pyspark.sql.functions import *
+import os
 
-# Umgebungsvariablen einlesen
-spark_master_url = os.getenv('SPARK_MASTER_URL', 'spark://spark-master:7077')
-kafka_brokers = os.getenv('BOOTSTRAP_SERVERS', 'kafka-broker-1:9092,kafka-broker-2:9093')
-
-# SparkSession initialisieren
+# Create Spark session
 spark = SparkSession.builder \
     .appName("KafkaLogLevelCount") \
-    .master(spark_master_url) \
+    .master("spark://spark-master:7077") \
     .getOrCreate()
 
-# Schema für die Kafka-Nachrichten definieren
+# Set Spark logging level to WARN
+spark.sparkContext.setLogLevel("WARN")
+
+# Get Kafka broker addresses from environment variable
+kafka_brokers = os.environ.get('BOOTSTRAP_SERVERS')
+
+# Define schema for log messages
 log_schema = StructType() \
-    .add("timestamp", TimestampType()) \
+    .add("timestamp", DoubleType()) \
     .add("level", StringType()) \
     .add("message", StringType())
 
-# Kafka-Stream lesen
+# Read from Kafka
 kafka_stream = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", kafka_brokers) \
@@ -27,27 +29,48 @@ kafka_stream = spark.readStream \
     .option("startingOffsets", "earliest") \
     .load()
 
-# Nachrichten parsen und Schema anwenden
+# Parse messages and apply schema
 parsed_stream = kafka_stream.selectExpr("CAST(value AS STRING)") \
     .select(from_json(col("value"), log_schema).alias("data")) \
     .select("data.*")
 
-# Nur Nachrichten mit Log-Level "INFO" filtern
+# Convert timestamp from seconds since epoch to TimestampType
+parsed_stream = parsed_stream.withColumn("timestamp", col("timestamp").cast(TimestampType()))
+
+# Filter only INFO level logs
 info_logs = parsed_stream.filter(col("level") == "INFO")
 
-# Anzahl der "INFO"-Logs im Sliding Window berechnen
+# Count INFO logs in sliding window
 windowed_counts = info_logs \
     .withWatermark("timestamp", "30 seconds") \
     .groupBy(
         window(col("timestamp"), "30 seconds", "10 seconds")
     ).count()
 
-# Ausgabe auf der Konsole
-query = windowed_counts.writeStream \
+# Output to console
+console_query = windowed_counts.writeStream \
     .outputMode("update") \
     .format("console") \
     .option("truncate", "false") \
+    .trigger(processingTime='10 seconds') \
     .start()
 
-# Streaming starten
-query.awaitTermination()
+# # Write to MariaDB
+# jdbc_url = "jdbc:mysql://docker-mariadb-1:3306/logs"
+# jdbc_properties = {
+#     "user": "root",
+#     "password": "password",
+#     "driver": "org.mariadb.jdbc.Driver"
+# }
+
+# def write_to_mariadb(batch_df, batch_id):
+#     batch_df.write.jdbc(url=jdbc_url, table="log_counts", mode="append", properties=jdbc_properties)
+
+# mariadb_query = windowed_counts.writeStream \
+#     .outputMode("update") \
+#     .foreachBatch(write_to_mariadb) \
+#     .trigger(processingTime='10 seconds') \
+#     .start()
+
+# Start streaming
+console_query.awaitTermination()
