@@ -2,6 +2,7 @@ import os
 from confluent_kafka import Producer
 import json
 import time
+import random
 
 # Zugriff auf die Umgebungsvariable
 bootstrap_servers = os.getenv('BOOTSTRAP_SERVERS', 'localhost:9092')
@@ -34,7 +35,7 @@ try:
         producer.poll(0)
         
         print(f"Sent: {log}")
-        time.sleep(1)
+        time.sleep(random.uniform(0.1, 5))  # Random sleep between 0.1 and 5 seconds
 except KeyboardInterrupt:
     # Warte darauf, dass alle Nachrichten gesendet wurden, bevor das Programm beendet wird
     print("Beenden des Producers...")

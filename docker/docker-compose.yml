@@ -1,11 +1,11 @@
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.7.2
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
 
   kafka-broker-1:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.7.2
     container_name: kafka-broker-1
     depends_on:
       - zookeeper
@@ -23,7 +23,7 @@ services:
       - /var/lib/kafka-1/data
 
   kafka-broker-2:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.7.2
     container_name: kafka-broker-2
     depends_on:
       - zookeeper
@@ -51,7 +51,7 @@ services:
       BOOTSTRAP_SERVERS: kafka-broker-1:9092,kafka-broker-2:9093
 
   spark-master:
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.5.3
     environment:
       SPARK_MODE: master
       SPARK_MASTER_HOST: spark-master
@@ -61,7 +61,7 @@ services:
       - "8080:8080"
 
   spark-worker:
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.5.3
     environment:
       SPARK_MODE: worker
       SPARK_MASTER_URL: spark://spark-master:7077
@@ -84,7 +84,7 @@ services:
       BOOTSTRAP_SERVERS: kafka-broker-1:9092,kafka-broker-2:9093
 
   mariadb:
-    image: mariadb:latest
+    image: mariadb:11.7.1-ubi9-rc
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: logs
@@ -94,7 +94,7 @@ services:
       - mariadb-data:/var/lib/mysql  # Persistent Volume für MariaDB-Daten
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana@sha256:e53433f89320eaa67bee3d862bae17daf96821cc73e5ce4b3c6ac143f3f994d0 # main-ubuntu
     container_name: grafana
     ports:
       - "3000:3000"
