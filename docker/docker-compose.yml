@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -41,10 +40,22 @@ services:
     volumes:
       - /var/lib/kafka-2/data
 
+  kafka-producer:
+    build:
+      context: ../ingestion  # Verzeichnis, in dem sich das Dockerfile befindet
+      dockerfile: Dockerfile
+    depends_on:
+      - kafka-broker-1
+      - kafka-broker-2
+    environment:
+      BOOTSTRAP_SERVERS: kafka-broker-1:9092,kafka-broker-2:9093
+
   spark-master:
     image: bitnami/spark:latest
     environment:
       SPARK_MODE: master
+      SPARK_MASTER_HOST: spark-master
+      SPARK_MASTER_PORT: 7077
     ports:
       - "7077:7077"
       - "8080:8080"
@@ -54,8 +65,23 @@ services:
     environment:
       SPARK_MODE: worker
       SPARK_MASTER_URL: spark://spark-master:7077
+      BOOTSTRAP_SERVERS: kafka-broker-1:9092,kafka-broker-2:9093
     depends_on:
       - spark-master
+      - kafka-broker-1
+      - kafka-broker-2
+
+  spark-app:
+    build:
+      context: ../processing
+      dockerfile: Dockerfile
+    depends_on:
+      - spark-master
+      - kafka-broker-1
+      - kafka-broker-2
+    environment:
+      SPARK_MASTER_URL: spark://spark-master:7077
+      BOOTSTRAP_SERVERS: kafka-broker-1:9092,kafka-broker-2:9093
 
   mariadb:
     image: mariadb:latest
@@ -83,15 +109,7 @@ services:
     depends_on:
       - mariadb
        
-  kafka-producer:
-    build:
-      context: ../ingestion  # Verzeichnis, in dem sich das Dockerfile befindet
-      dockerfile: Dockerfile
-    depends_on:
-      - kafka-broker-1
-      - kafka-broker-2
-    environment:
-      BOOTSTRAP_SERVERS: kafka-broker-1:9092,kafka-broker-2:9093
+
 
 volumes:
   mariadb-data:  # Volume für MariaDB
