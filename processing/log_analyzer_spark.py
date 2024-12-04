@@ -55,22 +55,37 @@ console_query = windowed_counts.writeStream \
     .trigger(processingTime='10 seconds') \
     .start()
 
-# # Write to MariaDB
-# jdbc_url = "jdbc:mysql://docker-mariadb-1:3306/logs"
-# jdbc_properties = {
-#     "user": "root",
-#     "password": "password",
-#     "driver": "org.mariadb.jdbc.Driver"
-# }
+# Write to MariaDB
+jdbc_url = "jdbc:mysql://mariadb:3306/logs"
+jdbc_properties = {
+    "user": "root",
+    "password": "password",
+    "driver": "org.mariadb.jdbc.Driver"
+}
 
-# def write_to_mariadb(batch_df, batch_id):
-#     batch_df.write.jdbc(url=jdbc_url, table="log_counts", mode="append", properties=jdbc_properties)
+def write_to_mariadb(batch_df, batch_id):
+    # Flatten the window struct and select required columns
+    flattened_df = batch_df.select(
+        "window.start", 
+        "window.end",
+        "count"
+    )
+    
+    # Write flattened DataFrame to MariaDB
+    flattened_df.write.jdbc(
+        url=jdbc_url, 
+        table="log_counts", 
+        mode="append", 
+        properties=jdbc_properties
+    )
 
-# mariadb_query = windowed_counts.writeStream \
-#     .outputMode("update") \
-#     .foreachBatch(write_to_mariadb) \
-#     .trigger(processingTime='10 seconds') \
-#     .start()
+
+mariadb_query = windowed_counts.writeStream \
+    .outputMode("update") \
+    .foreachBatch(write_to_mariadb) \
+    .trigger(processingTime='10 seconds') \
+    .start()
 
 # Start streaming
 console_query.awaitTermination()
+mariadb_query.awaitTermination()

@@ -78,8 +78,10 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - spark-master
+      - spark-worker
       - kafka-broker-1
       - kafka-broker-2
+      - mariadb
     environment:
       SPARK_MASTER_URL: spark://spark-master:7077
       BOOTSTRAP_SERVERS: kafka-broker-1:9092,kafka-broker-2:9093
@@ -93,6 +95,7 @@ services:
       - "3306:3306"
     volumes:
       - mariadb-data:/var/lib/mysql  # Persistent Volume für MariaDB-Daten
+      - ./mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   grafana:
     image: grafana/grafana:11.3.2

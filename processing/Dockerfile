@@ -17,7 +17,7 @@ RUN wget https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_${
     wget https://repo1.maven.org/maven2/org/apache/spark/spark-streaming-kafka-0-10_${SCALA_VERSION}/${SPARK_VERSION}/spark-streaming-kafka-0-10_${SCALA_VERSION}-${SPARK_VERSION}.jar -P /opt/bitnami/spark/jars/
 
 # Download MariaDB JDBC driver
-# RUN wget https://downloads.mariadb.com/Connectors/java/connector-java-2.7.4/mariadb-java-client-2.7.4.jar -P /opt/bitnami/spark/jars/
+RUN wget https://downloads.mariadb.com/Connectors/java/connector-java-2.7.4/mariadb-java-client-2.7.4.jar -P /opt/bitnami/spark/jars/
 
 # Copy Python dependencies and install them
 COPY requirements.txt /app/requirements.txt
@@ -32,7 +32,7 @@ ENV JARS_PATHS="/opt/bitnami/spark/jars/spark-sql-kafka-0-10_${SCALA_VERSION}-${
 /opt/bitnami/spark/jars/kafka-clients-${KAFKA_CLIENT_VERSION}.jar,\
 /opt/bitnami/spark/jars/commons-pool2-2.12.0.jar,\
 /opt/bitnami/spark/jars/spark-token-provider-kafka-0-10_${SCALA_VERSION}-${SPARK_VERSION}.jar,\
-/opt/bitnami/spark/jars/spark-streaming-kafka-0-10_${SCALA_VERSION}-${SPARK_VERSION}.jar"
-#   /opt/bitnami/spark/jars/mariadb-java-client-2.7.4.jar \
+/opt/bitnami/spark/jars/spark-streaming-kafka-0-10_${SCALA_VERSION}-${SPARK_VERSION}.jar\
+/opt/bitnami/spark/jars/mariadb-java-client-2.7.4.jar"
 
 CMD spark-submit --jars ${JARS_PATHS} /app/log_analyzer_spark.py
