@@ -1,14 +1,13 @@
 FROM bitnami/spark:3.5.3
 
-ENV SPARK_VERSION=3.5.3
-
 # Install Python, pip, and wget
 USER root
 RUN apt-get update && apt-get install -y python3 python3-pip wget
-# Set environment variables for Scala
-ENV SCALA_VERSION=2.12
-ENV SCALA_VERSION_MINOR=.15
+
+# Set version environment variables
 ENV KAFKA_CLIENT_VERSION=2.8.1
+ENV SPARK_VERSION=3.5.3
+ENV SCALA_VERSION=2.12
 
 # Download necessary JARs for Kafka Integration
 RUN wget https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_${SCALA_VERSION}/${SPARK_VERSION}/spark-sql-kafka-0-10_${SCALA_VERSION}-${SPARK_VERSION}.jar -P /opt/bitnami/spark/jars/ && \
