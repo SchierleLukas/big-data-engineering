@@ -1,3 +1,4 @@
+
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.7.2
@@ -42,7 +43,7 @@ services:
 
   kafka-producer:
     build:
-      context: ../ingestion  # Verzeichnis, in dem sich das Dockerfile befindet
+      context: ./ingestion
       dockerfile: Dockerfile
     depends_on:
       - kafka-broker-1
@@ -73,7 +74,7 @@ services:
 
   spark-app:
     build:
-      context: ../processing
+      context: ./processing
       dockerfile: Dockerfile
     depends_on:
       - spark-master
@@ -94,7 +95,7 @@ services:
       - mariadb-data:/var/lib/mysql  # Persistent Volume für MariaDB-Daten
 
   grafana:
-    image: grafana/grafana@sha256:e53433f89320eaa67bee3d862bae17daf96821cc73e5ce4b3c6ac143f3f994d0 # main-ubuntu
+    image: grafana/grafana:11.3.2
     container_name: grafana
     ports:
       - "3000:3000"
@@ -116,4 +117,3 @@ volumes:
     driver: local
   grafana-data:  # Volume für Grafana
     driver: local
-  
