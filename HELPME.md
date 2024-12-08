@@ -39,7 +39,7 @@ To view the contents of the MariaDB, follow these steps:
     SHOW TABLES;
     ```
 
-6. View the contents of a specific table, for example `logs_count`:
+6. View the contents of a specific table, for example `log_data_`:
     ```sql
-    SELECT * FROM logs_count;
+    SELECT * FROM log_data;
     ```

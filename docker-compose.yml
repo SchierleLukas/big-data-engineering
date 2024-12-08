@@ -94,7 +94,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - mariadb-data:/var/lib/mysql  # Persistent Volume für MariaDB-Daten
+      # - mariadb-data:/var/lib/mysql  # Persistent Volume für MariaDB-Daten, active to persist data
       - ./mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   grafana:

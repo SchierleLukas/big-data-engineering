@@ -32,60 +32,61 @@ kafka_stream = spark.readStream \
 # Parse messages and apply schema
 parsed_stream = kafka_stream.selectExpr("CAST(value AS STRING)") \
     .select(from_json(col("value"), log_schema).alias("data")) \
-    .select("data.*")
-
-# Convert timestamp from seconds since epoch to TimestampType
-parsed_stream = parsed_stream.withColumn("timestamp", col("timestamp").cast(TimestampType()))
-
-# Filter only INFO level logs
-info_logs = parsed_stream.filter(col("level") == "INFO")
+    .select("data.*") \
+    .withColumn("timestamp", col("timestamp").cast(TimestampType())) \
+    .filter(col("level") == "INFO")
 
 # Count INFO logs in sliding window
-windowed_counts = info_logs \
+windowed_counts = parsed_stream \
     .withWatermark("timestamp", "30 seconds") \
     .groupBy(
-        window(col("timestamp"), "30 seconds", "10 seconds")
+        window(col("timestamp"), "30 seconds", "15 seconds")
     ).count()
 
+# Flatten the window struct
+flattened_counts = windowed_counts.select(
+    col("window.start").alias("window_start"),
+    col("window.end").alias("window_end"),
+    col("count")
+)
+
 # Output to console
-console_query = windowed_counts.writeStream \
+console_query = flattened_counts.writeStream \
     .outputMode("update") \
     .format("console") \
     .option("truncate", "false") \
     .trigger(processingTime='10 seconds') \
     .start()
 
-# Write to MariaDB
-jdbc_url = "jdbc:mysql://mariadb:3306/logs"
-jdbc_properties = {
-    "user": "root",
-    "password": "password",
-    "driver": "org.mariadb.jdbc.Driver"
-}
 
-def write_to_mariadb(batch_df, batch_id):
-    # Flatten the window struct and select required columns
-    flattened_df = batch_df.select(
-        "window.start", 
-        "window.end",
-        "count"
-    )
+def write_to_mariadb(batch_df, epoch_id):
+    jdbc_url = "jdbc:mysql://mariadb:3306/logs"
     
-    # Write flattened DataFrame to MariaDB
-    flattened_df.write.jdbc(
-        url=jdbc_url, 
-        table="log_counts", 
-        mode="append", 
-        properties=jdbc_properties
-    )
+    connection_properties = {
+        "user": "root",
+        "password": "password",
+        "driver": "com.mysql.cj.jdbc.Driver"
+    }
 
+    try:
+        batch_df.select(
+            col("window_start").cast("timestamp"),
+            col("window_end").cast("timestamp"),
+            col("count").cast("bigint")
+        ).write \
+            .format("jdbc") \
+            .mode("append") \
+            .option("url", jdbc_url) \
+            .option("dbtable", "log_data") \
+            .options(**connection_properties) \
+            .save()
+    except Exception as e:
+        print(f"Error writing batch {epoch_id}: {str(e)}")
 
-mariadb_query = windowed_counts.writeStream \
-    .outputMode("update") \
+mariadb_query = flattened_counts.writeStream \
     .foreachBatch(write_to_mariadb) \
-    .trigger(processingTime='10 seconds') \
+    .outputMode("update") \
+    .trigger(processingTime="15 seconds") \
     .start()
 
-# Start streaming
-console_query.awaitTermination()
-mariadb_query.awaitTermination()
+spark.streams.awaitAnyTermination()
