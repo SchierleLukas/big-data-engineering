@@ -15,14 +15,18 @@
       }
     ]
   },
+  "description": "The dashboard counts the occurences of log with the loglevel INFO in sliding windows",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 2,
+  "id": 3,
   "links": [],
   "panels": [
     {
-      "datasource": "logs",
+      "datasource": {
+        "type": "mysql",
+        "uid": "P98F38F12DB221A8C"
+      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -36,7 +40,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "barWidthFactor": 0.6,
-            "drawStyle": "line",
+            "drawStyle": "bars",
             "fillOpacity": 0,
             "gradientMode": "none",
             "hideFrom": {
@@ -58,7 +62,7 @@
               "mode": "none"
             },
             "thresholdsStyle": {
-              "mode": "area"
+              "mode": "off"
             }
           },
           "mappings": [],
@@ -70,71 +74,21 @@
                 "value": null
               },
               {
-                "color": "#EAB839",
-                "value": 4
-              },
-              {
                 "color": "red",
-                "value": 8
+                "value": 80
               }
             ]
           }
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "normal"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "semi-dark-green",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "warning"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "semi-dark-yellow",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "error"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "semi-dark-red",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
-        "h": 14,
-        "w": 23,
+        "h": 8,
+        "w": 12,
         "x": 0,
         "y": 0
       },
-      "id": 2,
+      "id": 1,
       "options": {
         "legend": {
           "calcs": [],
@@ -147,19 +101,45 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.3.2",
       "targets": [
         {
           "dataset": "logs",
-          "editorMode": "code",
+          "datasource": {
+            "type": "mysql",
+            "uid": "P98F38F12DB221A8C"
+          },
+          "editorMode": "builder",
           "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT \r\n    time_window AS time,\r\n    MAX(CASE WHEN type = 'normal' THEN count ELSE NULL END) AS normal,\r\n    MAX(CASE WHEN type = 'warning' THEN count ELSE NULL END) AS warning,\r\n    MAX(CASE WHEN type = 'error' THEN count ELSE NULL END) AS error\r\nFROM \r\n    log_counts\r\nWHERE \r\n    $__timeFilter(time_window)\r\nGROUP BY \r\n    time_window\r\nORDER BY \r\n    time_window ASC;\r\n",
+          "rawSql": "SELECT window_start, window_end, count FROM logs.log_data LIMIT 50 ",
           "refId": "A",
           "sql": {
             "columns": [
               {
-                "parameters": [],
+                "parameters": [
+                  {
+                    "name": "window_start",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              },
+              {
+                "parameters": [
+                  {
+                    "name": "window_end",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              },
+              {
+                "parameters": [
+                  {
+                    "name": "count",
+                    "type": "functionParameter"
+                  }
+                ],
                 "type": "function"
               }
             ],
@@ -172,27 +152,29 @@
               }
             ],
             "limit": 50
-          }
+          },
+          "table": "log_data"
         }
       ],
-      "title": "Timeseries Error-Mapping",
+      "title": "Panel Title",
       "type": "timeseries"
     }
   ],
   "preload": false,
+  "refresh": "5s",
   "schemaVersion": 40,
   "tags": [],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "2024-11-26T10:00:07.496Z",
-    "to": "2024-11-26T10:00:44.484Z"
+    "from": "2024-12-19T18:32:15.000Z",
+    "to": "2024-12-19T18:38:15.000Z"
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Error-Mapping",
-  "uid": "fe570ysiyhla8e",
-  "version": 8,
+  "title": "Loglevel INFO count",
+  "uid": "ce7ewlvb1dvy8c",
+  "version": 1,
   "weekStart": ""
 }
