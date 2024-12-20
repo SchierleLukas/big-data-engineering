@@ -33,32 +33,37 @@ kafka_stream = spark.readStream \
 parsed_stream = kafka_stream.selectExpr("CAST(value AS STRING)") \
     .select(from_json(col("value"), log_schema).alias("data")) \
     .select("data.*") \
-    .withColumn("timestamp", col("timestamp").cast(TimestampType())) \
-    .filter(col("level") == "INFO")
+    .withColumn("timestamp", col("timestamp").cast(TimestampType()))
 
-# Count INFO logs in sliding window
 windowed_counts = parsed_stream \
-    .withWatermark("timestamp", "30 seconds") \
+    .withWatermark("timestamp", "1 minute") \
     .groupBy(
-        window(col("timestamp"), "30 seconds", "15 seconds")
-    ).count()
-
-# Flatten the window struct
-flattened_counts = windowed_counts.select(
-    col("window.start").alias("window_start"),
-    col("window.end").alias("window_end"),
-    col("count")
-)
+        window(col("timestamp"), "30 seconds", "15 seconds"),
+        ) \
+    .agg(
+        count(when(col("level") == "INFO", 1)).alias("INFO_count"),
+        count(when(col("level") == "ERROR", 1)).alias("ERROR_count"),
+        count(when(col("level") == "DEBUG", 1)).alias("DEBUG_count"),
+        count(when(col("level") == "WARN", 1)).alias("WARN_count")
+    ) \
+    .select(
+        col("window.start").alias("window_start"),
+        col("window.end").alias("window_end"),
+        col("INFO_count"),
+        col("ERROR_count"),
+        col("DEBUG_count"),
+        col("WARN_count")
+    )
 
 # Output to console
-console_query = flattened_counts.writeStream \
+console_query = windowed_counts.writeStream \
     .outputMode("update") \
     .format("console") \
     .option("truncate", "false") \
     .trigger(processingTime='10 seconds') \
     .start()
 
-
+# Function to write logs to MariaDB
 def write_to_mariadb(batch_df, epoch_id):
     jdbc_url = "jdbc:mysql://mariadb:3306/logs"
     
@@ -69,11 +74,7 @@ def write_to_mariadb(batch_df, epoch_id):
     }
 
     try:
-        batch_df.select(
-            col("window_start").cast("timestamp"),
-            col("window_end").cast("timestamp"),
-            col("count").cast("bigint")
-        ).write \
+        batch_df.write \
             .format("jdbc") \
             .mode("append") \
             .option("url", jdbc_url) \
@@ -83,10 +84,12 @@ def write_to_mariadb(batch_df, epoch_id):
     except Exception as e:
         print(f"Error writing batch {epoch_id}: {str(e)}")
 
-mariadb_query = flattened_counts.writeStream \
+# Write aggregated data to MariaDB
+mariadb_query = windowed_counts.writeStream \
     .foreachBatch(write_to_mariadb) \
     .outputMode("update") \
     .trigger(processingTime="15 seconds") \
     .start()
 
+# Wait for termination
 spark.streams.awaitAnyTermination()

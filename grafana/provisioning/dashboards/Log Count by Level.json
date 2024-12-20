@@ -15,11 +15,11 @@
       }
     ]
   },
-  "description": "The dashboard counts the occurences of log with the loglevel INFO in sliding windows",
+  "description": "This dashboard visualizes the amount of logs by loglevel in sliding time window",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 3,
+  "id": 4,
   "links": [],
   "panels": [
     {
@@ -80,7 +80,62 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "error_count"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "info_count"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "semi-dark-purple",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "info_count"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -111,7 +166,7 @@
           },
           "editorMode": "builder",
           "format": "table",
-          "rawSql": "SELECT window_start, window_end, count FROM logs.log_data LIMIT 50 ",
+          "rawSql": "SELECT window_start, window_end, info_count, error_count, debug_count, warn_count FROM logs.log_data LIMIT 50 ",
           "refId": "A",
           "sql": {
             "columns": [
@@ -136,7 +191,34 @@
               {
                 "parameters": [
                   {
-                    "name": "count",
+                    "name": "info_count",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              },
+              {
+                "parameters": [
+                  {
+                    "name": "error_count",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              },
+              {
+                "parameters": [
+                  {
+                    "name": "debug_count",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              },
+              {
+                "parameters": [
+                  {
+                    "name": "warn_count",
                     "type": "functionParameter"
                   }
                 ],
@@ -156,7 +238,7 @@
           "table": "log_data"
         }
       ],
-      "title": "Panel Title",
+      "title": "Log Count by Log Level",
       "type": "timeseries"
     }
   ],
@@ -168,13 +250,13 @@
     "list": []
   },
   "time": {
-    "from": "2024-12-19T18:32:15.000Z",
-    "to": "2024-12-19T18:38:15.000Z"
+    "from": "now-15m",
+    "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Loglevel INFO count",
-  "uid": "ce7ewlvb1dvy8c",
-  "version": 1,
+  "title": "Log Count by Level",
+  "uid": "be7fbbkbt8wlcf",
+  "version": 8,
   "weekStart": ""
 }

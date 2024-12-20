@@ -9,7 +9,10 @@ CREATE TABLE IF NOT EXISTS log_data (
     id BIGINT AUTO_INCREMENT,
     window_start TIMESTAMP,
     window_end TIMESTAMP,
-    count BIGINT,
+    debug_count BIGINT DEFAULT 0,
+    info_count BIGINT DEFAULT 0,
+    warn_count BIGINT DEFAULT 0,
+    error_count BIGINT DEFAULT 0,
     PRIMARY KEY (id),
     INDEX idx_window (window_start, window_end)
 );
