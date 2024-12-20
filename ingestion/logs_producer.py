@@ -25,10 +25,14 @@ producer_config = {
 # Erstelle den Producer
 producer = Producer(producer_config)
 
-# Simuliere Logs
+# Simuliere Logs mit Gewichtung
+log_levels = ["DEBUG", "INFO", "WARN", "ERROR"]
+log_weights = [0.1, 0.6, 0.2, 0.1]  # Gewichtung für die Log-Level
+
 try:
     while True:
-        log = {"timestamp": time.time(), "level": "INFO", "message": "Sample log"}
+        log_level = random.choices(log_levels, weights=log_weights, k=1)[0]
+        log = {"timestamp": time.time(), "level": log_level, "message": f"Sample {log_level.lower()} log"}
         producer.produce('server-logs', key=str(time.time()), value=json.dumps(log), callback=delivery_report)
         
         # Stellt sicher, dass die Nachricht gesendet wird
