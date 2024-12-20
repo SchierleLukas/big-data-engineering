@@ -8,10 +8,10 @@ services:
   kafka-broker-1:
     image: confluentinc/cp-kafka:7.7.2
     container_name: kafka-broker-1
-    depends_on:
-      - zookeeper
     ports:
       - "9092:9092"
+    depends_on:
+      - zookeeper
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -26,10 +26,10 @@ services:
   kafka-broker-2:
     image: confluentinc/cp-kafka:7.7.2
     container_name: kafka-broker-2
-    depends_on:
-      - zookeeper
     ports:
       - "9093:9093"
+    depends_on:
+      - zookeeper
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -53,24 +53,24 @@ services:
 
   spark-master:
     image: bitnami/spark:3.5.3
+    ports:
+      - "7077:7077"
+      - "8080:8080"
     environment:
       SPARK_MODE: master
       SPARK_MASTER_HOST: spark-master
       SPARK_MASTER_PORT: 7077
-    ports:
-      - "7077:7077"
-      - "8080:8080"
 
   spark-worker:
     image: bitnami/spark:3.5.3
-    environment:
-      SPARK_MODE: worker
-      SPARK_MASTER_URL: spark://spark-master:7077
-      BOOTSTRAP_SERVERS: kafka-broker-1:9092,kafka-broker-2:9093
     depends_on:
       - spark-master
       - kafka-broker-1
       - kafka-broker-2
+    environment:
+      SPARK_MODE: worker
+      SPARK_MASTER_URL: spark://spark-master:7077
+      BOOTSTRAP_SERVERS: kafka-broker-1:9092,kafka-broker-2:9093
 
   spark-app:
     build:
@@ -88,33 +88,33 @@ services:
 
   mariadb:
     image: mariadb:11.7.1-ubi9-rc
+    ports:
+      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: logs
-    ports:
-      - "3306:3306"
     volumes:
-      # - mariadb-data:/var/lib/mysql  # Persistent Volume für MariaDB-Daten, active to persist data
       - ./mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql
+      # - mariadb-data:/var/lib/mysql  # Persistent Volume für MariaDB-Daten, active to persist data
 
   grafana:
     image: grafana/grafana:11.3.2
     container_name: grafana
     ports:
       - "3000:3000"
-    volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - grafana-data:/var/lib/grafana
+    depends_on:
+      - mariadb
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
-    depends_on:
-      - mariadb
-       
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - grafana-data:/var/lib/grafana  # Persist Volume für Grafana, active to persist data
 
 
+# active to persist data:     
 volumes:
-  mariadb-data:  # Volume für MariaDB
-    driver: local
   grafana-data:  # Volume für Grafana
     driver: local
+#   mariadb-data:  # Volume für MariaDB
+#     driver: local
