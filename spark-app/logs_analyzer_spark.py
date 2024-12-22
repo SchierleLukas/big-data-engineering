@@ -18,7 +18,7 @@ mariadb_password = os.environ.get('MARIADB_PASSWORD')
 
 # Create Spark session with reduced resources for local deployment
 spark = SparkSession.builder \
-    .appName("KafkaLogLevelCount") \
+    .appName("LogAnalyzerStreamingApp") \
     .master(spark_master_url) \
     .config("spark.executor.cores", "1") \
     .config("spark.executor.memory", "1g") \

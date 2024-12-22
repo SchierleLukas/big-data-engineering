@@ -1,8 +1,9 @@
 services:
 
-  kafka-producer:
+# generation layer:
+  logs-producer:
     build:
-      context: ./ingestion
+      context: ./logs-producer
       dockerfile: Dockerfile
     depends_on:
       - kafka-broker-1
@@ -11,6 +12,7 @@ services:
       BOOTSTRAP_SERVERS: kafka-broker-1:9092,kafka-broker-2:9093
       KAFKA_TOPIC: server-logs
 
+# ingestion layer:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.7.2
     environment:
@@ -52,6 +54,7 @@ services:
     volumes:
       - /var/lib/kafka-2/data
 
+# transformation layer:
   spark-master:
     image: bitnami/spark:3.5.3
     ports:
@@ -96,7 +99,7 @@ services:
 
   spark-app:
     build:
-      context: ./processing
+      context: ./spark-app
       dockerfile: Dockerfile
     ports:
       - "8083:8081"
@@ -115,6 +118,7 @@ services:
       MARIADB_USER: root
       MARIADB_PASSWORD: password
 
+# serving layer:
   mariadb:
     image: mariadb:11.7.1-ubi9-rc
     ports:
@@ -126,6 +130,7 @@ services:
       - ./mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql
       # - mariadb-data:/var/lib/mysql  # Persistent Volume for MariaDB-Daten, active to persist data
 
+# visualization layer:
   grafana:
     image: grafana/grafana:11.3.2
     ports:
@@ -139,8 +144,7 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning
       - grafana-data:/var/lib/grafana  # Persist Volume for Grafana, active to persist data
 
-
-# active to persist data:     
+# volumes (active to persist data):    
 volumes:
   grafana-data:  # Volume for Grafana
     driver: local
