@@ -32,7 +32,8 @@ graph TD
         M1[spark-master]
         W1[spark-worker-1]
         W2[spark-worker-2]
-        C[spark-app:LogAnalyzerStreamingApp]
+        C[spark-app:
+LogAnalyzerStreamingApp]
         M1 --> W1
         M1 --> W2
         W1 --> C
