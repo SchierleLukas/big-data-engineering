@@ -24,8 +24,8 @@ graph TD
         Z[zookeeper]
         A --> B1
         A --> B2
-        B1 --- Z
-        B2 --- Z
+        B1 <-.-> Z
+        B2 <-.-> Z
     end
 
     subgraph Transformation_Layer
@@ -34,10 +34,11 @@ graph TD
         W2[spark-worker-2]
         C[spark-app:
 LogAnalyzerStreamingApp]
-        M1 --> W1
-        M1 --> W2
-        W1 --> C
-        W2 --> C
+        M1 <-.-> W1
+        M1 <-.-> W2
+        M1 <-.-> C
+        W1 <-.-> C
+        W2 <-.-> C
         B1 --> C
         B2 --> C
     end
@@ -86,7 +87,7 @@ LogAnalyzerStreamingApp]
     Ensure Docker and Docker Compose are installed and running. This command will build and start all of the containers, defined in the [`docker-compose.yml`](docker-compose.yml).
 
 3. **Access the Grafana Dashboard**
-    - Open `http://localhost:3000` in your browser to monitor anomalies. Use the default credentials `admin`/`admin` to log in.
+    - Open `http://localhost:3000` in your browser and use the default credentials `admin`/`admin` to log in.
 
 ## Implementation Notes
 
