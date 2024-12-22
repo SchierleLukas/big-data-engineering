@@ -1,3 +1,4 @@
+/* This SQL script is executed at container start */
 CREATE DATABASE IF NOT EXISTS logs;
 USE logs;
 

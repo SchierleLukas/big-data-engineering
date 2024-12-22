@@ -3,29 +3,42 @@ from pyspark.sql.types import *
 from pyspark.sql.functions import *
 import os
 
-# Create Spark session
+# Read environment variables...
+# for kafka
+kafka_bootstrap_servers = os.environ.get('BOOTSTRAP_SERVERS', 'kafka-broker-1:9092,kafka-broker-2:9093')
+kafka_topic = os.getenv('KAFKA_TOPIC', 'server-logs')
+
+# for spark
+spark_master_url = os.environ.get('SPARK_MASTER_URL', 'spark://spark-master:7077')
+
+# for mariadb
+mariadb_url = os.environ.get('MARIADB_URL', 'jdbc:mysql://mariadb:3306/logs')
+mariadb_user = os.environ.get('MARIADB_USER')
+mariadb_password = os.environ.get('MARIADB_PASSWORD')
+
+# Create Spark session with reduced resources for local deployment
 spark = SparkSession.builder \
     .appName("KafkaLogLevelCount") \
-    .master("spark://spark-master:7077") \
+    .master(spark_master_url) \
+    .config("spark.executor.cores", "1") \
+    .config("spark.executor.memory", "1g") \
     .getOrCreate()
 
-# Set Spark logging level to WARN
+# Set Spark logging level to WARN to reduce console output
 spark.sparkContext.setLogLevel("WARN")
 
-# Get Kafka broker addresses from environment variable
-kafka_brokers = os.environ.get('BOOTSTRAP_SERVERS')
-
 # Define schema for log messages
-log_schema = StructType() \
-    .add("timestamp", DoubleType()) \
-    .add("level", StringType()) \
-    .add("message", StringType())
+log_schema = StructType([
+    StructField("timestamp", DoubleType(), True),
+    StructField("level", StringType(), True),
+    StructField("message", StringType(), True)
+])
 
 # Read from Kafka
 kafka_stream = spark.readStream \
     .format("kafka") \
-    .option("kafka.bootstrap.servers", kafka_brokers) \
-    .option("subscribe", "server-logs") \
+    .option("kafka.bootstrap.servers", kafka_bootstrap_servers) \
+    .option("subscribe", kafka_topic) \
     .option("startingOffsets", "earliest") \
     .load()
 
@@ -35,10 +48,11 @@ parsed_stream = kafka_stream.selectExpr("CAST(value AS STRING)") \
     .select("data.*") \
     .withColumn("timestamp", col("timestamp").cast(TimestampType()))
 
+# Aggregate log counts by level and time window
 windowed_counts = parsed_stream \
-    .withWatermark("timestamp", "1 minute") \
+    .withWatermark("timestamp", "30 seconds") \
     .groupBy(
-        window(col("timestamp"), "30 seconds", "15 seconds"),
+        window(col("timestamp"), "30 seconds", "15 seconds"), # 30 seconds windows sliding every 15 seconds
         ) \
     .agg(
         count(when(col("level") == "INFO", 1)).alias("INFO_count"),
@@ -60,16 +74,14 @@ console_query = windowed_counts.writeStream \
     .outputMode("update") \
     .format("console") \
     .option("truncate", "false") \
-    .trigger(processingTime='10 seconds') \
+    .trigger(processingTime='15 seconds') \
     .start()
 
 # Function to write logs to MariaDB
 def write_to_mariadb(batch_df, epoch_id):
-    jdbc_url = "jdbc:mysql://mariadb:3306/logs"
-    
     connection_properties = {
-        "user": "root",
-        "password": "password",
+        "user": mariadb_user,
+        "password": mariadb_password,
         "driver": "com.mysql.cj.jdbc.Driver"
     }
 
@@ -77,7 +89,7 @@ def write_to_mariadb(batch_df, epoch_id):
         batch_df.write \
             .format("jdbc") \
             .mode("append") \
-            .option("url", jdbc_url) \
+            .option("url", mariadb_url) \
             .option("dbtable", "log_data") \
             .options(**connection_properties) \
             .save()

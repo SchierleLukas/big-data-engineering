@@ -4,43 +4,44 @@ import json
 import time
 import random
 
-# Zugriff auf die Umgebungsvariable
-bootstrap_servers = os.getenv('BOOTSTRAP_SERVERS', 'localhost:9092')
+# Access the environment variable
+bootstrap_servers = os.getenv('BOOTSTRAP_SERVERS', 'kafka-broker-1:9092,kafka-broker-2:9093')
+kafka_topic = os.getenv('KAFKA_TOPIC', 'server-logs')
 
-# Konfiguration des Producers
+# Producer configuration
 def delivery_report(err, msg):
     """
-    Callback-Funktion, die ausgeführt wird, wenn eine Nachricht 
-    erfolgreich gesendet wurde oder ein Fehler aufgetreten ist.
+    Callback function that is executed when a message
+    has been successfully delivered or when an error occurs.
     """
     if err is not None:
-        print(f'Nachricht fehlgeschlagen: {err}')
+        print(f'Message delivery failed: {err}')
     else:
-        print(f'Nachricht erfolgreich gesendet: {msg.topic()} [{msg.partition()}]')
+        print(f'Message successfully delivered: {msg.topic()} [{msg.partition()}]')
 
 producer_config = {
     'bootstrap.servers': bootstrap_servers
 }
 
-# Erstelle den Producer
+# Create the producer
 producer = Producer(producer_config)
 
-# Simuliere Logs mit Gewichtung
+# Simulate logs with weighting
 log_levels = ["DEBUG", "INFO", "WARN", "ERROR"]
-log_weights = [0.1, 0.6, 0.2, 0.1]  # Gewichtung für die Log-Level
+log_weights = [0.1, 0.6, 0.2, 0.1]  # Weights for log levels
 
 try:
     while True:
         log_level = random.choices(log_levels, weights=log_weights, k=1)[0]
         log = {"timestamp": time.time(), "level": log_level, "message": f"Sample {log_level.lower()} log"}
-        producer.produce('server-logs', key=str(time.time()), value=json.dumps(log), callback=delivery_report)
+        producer.produce(kafka_topic, key=str(time.time()), value=json.dumps(log), callback=delivery_report)
         
-        # Stellt sicher, dass die Nachricht gesendet wird
+        # Ensure the message is sent
         producer.poll(0)
         
         print(f"Sent: {log}")
         time.sleep(random.uniform(0.1, 5))  # Random sleep between 0.1 and 5 seconds
 except KeyboardInterrupt:
-    # Warte darauf, dass alle Nachrichten gesendet wurden, bevor das Programm beendet wird
-    print("Beenden des Producers...")
+    # Wait for all messages to be sent before terminating the program
+    print("Shutting down producer...")
     producer.flush()
