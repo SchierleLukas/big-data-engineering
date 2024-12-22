@@ -54,7 +54,7 @@ services:
     volumes:
       - /var/lib/kafka-2/data
 
-# transformation layer:
+# stream processing layer:
   spark-master:
     image: bitnami/spark:3.5.3
     ports:

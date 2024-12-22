@@ -1,12 +1,12 @@
 # big-data-engineering
 
-This project implements a big data engineering use case, that processes server logs through five distinct layers. The system generates synthetic logs in the Generation Layer, ingests them through Apache Kafka in the Ingestion Layer, processes them using a distributed Apache Spark cluster in the Transformation Layer, stores the processed data in MariaDB in the Serving Layer, and visualizes the results using Grafana in the Visualization Layer.
+This project implements a big data engineering use case, that processes server logs through five distinct layers. The system generates synthetic logs in the Generation Layer, ingests them through Apache Kafka in the Ingestion Layer, processes them using a distributed Apache Spark cluster in the Stream Processing Layer, stores the processed data in MariaDB in the Serving Layer, and visualizes the results using Grafana in the Visualization Layer.
 
 ## Project Overview
 
 - **Generation Layer**: Produces simulated server logs using a Python-based logs producer.
 - **Ingestion Layer**: Routes data through Kafka brokers (managed by Zookeeper) for reliable message queuing.
-- **Transformation Layer**: Processes streaming data using Spark master-worker cluster architecture.
+- **Stream Processing Layer**: Processes streaming data using Spark master-worker cluster architecture.
 - **Serving Layer**: Persists processed log data in MariaDB for storage and retrieval.
 - **Visualization Layer**: Presents data insights through Grafana dashboards.
 
@@ -28,7 +28,7 @@ graph TD
         B2 <-.-> Z
     end
 
-    subgraph Transformation_Layer
+    subgraph Stream_Processing_Layer
         M1[spark-master]
         W1[spark-worker-1]
         W2[spark-worker-2]
