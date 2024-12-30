@@ -244,7 +244,7 @@
           "table": "log_data"
         }
       ],
-      "title": "Log Count by Log Level",
+      "title": "Timeline of logs count by log level",
       "type": "timeseries"
     },
     {
@@ -420,7 +420,7 @@
           "table": "log_data"
         }
       ],
-      "title": "% of Log-Categories",
+      "title": "Current distribution of logs by log level",
       "type": "piechart"
     }
   ],
@@ -437,7 +437,7 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Log Count by Level",
+  "title": "Log Analysis",
   "uid": "be7fbbkbt8wlcf",
   "version": 2,
   "weekStart": ""
