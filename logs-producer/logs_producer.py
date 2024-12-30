@@ -10,10 +10,6 @@ kafka_topic = os.getenv('KAFKA_TOPIC', 'server-logs')
 
 # Konfiguration des Producers
 def delivery_report(err, msg):
-    """
-    Callback function that is executed when a message
-    has been successfully delivered or when an error occurs.
-    """
     if err is not None:
         print(f'Message delivery failed: {err}')
     else:
