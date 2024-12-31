@@ -95,10 +95,11 @@ This implementation uses Docker Compose to simulate a distributed system on a si
 
 - **Local Simulation**: All services run as containers on one host, not truly distributed
 - **Data Persistence**: Data is not persisted between container restarts:
-  - Kafka messages are lost when brokers restart
-  - MariaDB data is volatile unless volumes are configured
-  - Grafana dashboards reset on container recreation
+    - Kafka messages are lost when brokers restart
+    - MariaDB data is volatile unless volumes are configured
+    - Grafana dashboards reset on container recreation
 - **Development Purpose**: This setup is intended for development and testing, not production use
+- **Security Note**: The passwords for MariaDB and Grafana are set to insecure default passwords. Ensure to change them if used beyond local development.
 
 ## License
 
